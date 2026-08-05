@@ -1,7 +1,9 @@
+
+/*
 #include <stdio.h>
 
 int main() {
-    printf("Hello my name is Rishi");
+    printf("Hello");
 
     return 0;
-}
+} */
