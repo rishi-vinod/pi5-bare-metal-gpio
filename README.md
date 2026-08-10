@@ -178,3 +178,31 @@ Also declares the GPIO driver interface:
 void gpio_set_output(int pin);
 void gpio_set_high(int pin);
 void gpio_set_low(int pin);
+
+Updated README on 08/10/2026
+
+## 🔌 Low-Level Hardware Driver (`gpio.c`)
+
+The `gpio.c` driver provides a direct Memory-Mapped I/O (MMIO) interface between our bare-metal kernel and the Raspberry Pi 5's **RP1 I/O Controller Chip**, bypassing operating system drivers entirely.
+
+### Architecture & Memory Offsets
+
+* **Base Address (`RIO_BASE`):** `0x1F000E0000ULL` — Maps directly to the RP1's Real-Time I/O (RIO) peripheral registers.
+* **Atomic Registers:**
+  * `RIO_OUT_SET` (`+0x24`): Drives target GPIO pins HIGH ($3.3\text{V}$) atomically without modifying neighboring pins.
+  * `RIO_OUT_CLR` (`+0x28`): Drives target GPIO pins LOW ($0\text{V}$) atomically without modifying neighboring pins.
+
+### Key Driver Functions
+
+* **`gpio_set_output(uint32_t pin)`**
+  Calculates the pin control register location within `IO_BANK0` using the RP1 hardware layout formula:
+  $$\text{ctrl\_reg} = \text{GPIO\_BASE} + (\text{pin} \times 8) + 4$$
+  * *Multiplier (`* 8`):* Accounted for each pin's 8-byte status/control hardware block.
+  * *Offset (`+ 4`):* Targets the Pin Control Register directly (skipping Status).
+  * Writes function mode `5` (ALT5) to configure the pin for software-controlled RIO GPIO.
+
+* **`gpio_set_high(uint32_t pin)`**
+  Executes an atomic bitwise write `(1U << pin)` to `RIO_OUT_SET`, enabling $3.3\text{V}$ output on the specified pin.
+
+* **`gpio_set_low(uint32_t pin)`**
+  Executes an atomic bitwise write `(1U << pin)` to `RIO_OUT_CLR`, pulling pin voltage down to $0\text{V}$ (Ground).
