@@ -24,5 +24,5 @@ void gpio_set_output(uint32_t pin);
 void gpio_set_high(uint32_t pin);
 void gpio_set_low(uint32_t pin);
 
-/* Use this whever a conditional is used - here we used #ifndef - this ends a conditional compilation block. */
+/* Use this whenever a conditional is used - here we used #ifndef - this ends a conditional compilation block. */
 #endif

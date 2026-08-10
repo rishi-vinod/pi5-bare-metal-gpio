@@ -144,3 +144,37 @@ The firmware will find `kernel8.img` and jump straight into your code.
 At the physical level, a `1` is a high voltage (~0.8–1.1V) and a `0` is ground (0V). Inside the BCM2712, billions of MOSFET transistors act as electrically controlled switches. When voltage is applied to a transistor's gate, current flows — that's a logic `1`. Combining transistors into NAND/NOR gates, then into flip-flops, gives you the registers and state machines that make a CPU work.
 
 Every instruction you write ultimately causes specific transistors on the die to switch on or off. Bare-metal programming is as close as software gets to that physical reality.
+
+Updated README on 08/09/2026
+
+### `linker.ld` — Memory Layout Script
+
+Tells the linker exactly where to place each section in physical RAM:
+
+- `ENTRY(_start)` — declares the hardware entry point
+- `. = 0x80000` — sets the load address to match the Pi 5 bootloader expectation
+- Sections are ordered: `.text.boot` → `.text` → `.rodata` → `.data` → `.bss`
+- `.bss` boundaries are exported as `__bss_start` and `__bss_end` for the assembler to use
+
+### `gpio.h` — MMIO Driver Interface
+
+Defines the hardware addresses and the macro used to touch them:
+
+| Symbol | Address | Description |
+|---|---|---|
+| `RP1_BASE` | `0x1F00000000` | RP1 southbridge peripheral base |
+| `GPIO_BASE` | `RP1_BASE + 0xD0000` | IO_BANK0 pin function registers |
+
+The core access macro:
+
+```c
+#define REG32(addr)  (*(volatile uint32_t *)(uintptr_t)(addr))
+```
+
+`volatile` prevents the compiler from optimizing away or reordering hardware register accesses — every read and write must reach the actual bus.
+
+Also declares the GPIO driver interface:
+```c
+void gpio_set_output(int pin);
+void gpio_set_high(int pin);
+void gpio_set_low(int pin);
