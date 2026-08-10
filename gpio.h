@@ -1,3 +1,4 @@
+/* .h files are used to declare functions and variables while .c files are used to define them */
 /* Header guards that make sure the compiler doesnt read the file more than once and skips. */
 
 #ifndef GPIO_H
